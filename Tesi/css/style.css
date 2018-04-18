@@ -1,0 +1,8 @@
+body {
+  padding-top: 150px;
+}
+.dragleft, .dragright {
+  height: 30px;
+  background: #333;
+  margin: 30px;
+}
