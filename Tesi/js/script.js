@@ -4,6 +4,8 @@
 $(window).load(function(){
 
 
+        //su git
+
         getRowEsameUtente(function(data){
             console.log(data)
         })
