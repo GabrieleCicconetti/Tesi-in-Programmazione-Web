@@ -50,7 +50,7 @@ body{
   padding-bottom: 0;
 }
 .ghost{
-  border: solid 1px lightskyblue;
+  border: solid 1px lightskyblue!important;
   border-radius: 5px;
   padding: 3px 10px;
   color: transparent;
@@ -77,6 +77,46 @@ body{
 .margin-bottom{margin-bottom: 40px;}
 
 .esame i {cursor: pointer;}
+/* PER SAFARI :/ */
 [draggable=true] {
   -khtml-user-drag: element;
+}
+/**/
+.container-esami-facolta .inner, .container-esami-utente .inner {
+  height: 520px;
+  overflow-x: hidden;
+  overflow-y: scroll;
+  position: relative;
+}
+.loader {
+  position: absolute;
+  top:0;left:0;right:0;bottom:0;
+  background: rgba(255,255,255, .5);
+}
+.loader img {
+  width: 40px;
+  height: 40px;
+  position: absolute;
+  top:50%;left:50%;transform: translate(-50%, 50%);
+}
+.container-esami-utente .loader {
+  display: none;
+}
+
+.center-vertical {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.drag-action {
+  cursor: pointer;
+}
+.drag-action img{
+  width: 100%;
+}
+
+.scroll-bar-padding {
+  padding-right: 13px;
 }
