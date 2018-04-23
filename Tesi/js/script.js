@@ -61,6 +61,7 @@ $(window).load(function(){
     const containerEsamiFacolta = $('.container-esami-facolta .inner')
     const containerRiepilogo    = $('.riepilogo')
     const campiMancantiEsame    = $('#campi-mancanti-esame')
+    const loaderEsamiUtente     = $('.container-esami-utente .loader')
     const nomeEsame             = '#nome-esame'
     const pesoEsame             = '#peso-esame'
     const esame                 = '<div class="esame"><span></span><i class="fas fa-times"></i></div>'
@@ -80,7 +81,7 @@ $(window).load(function(){
 
 
     /* INSERISCO GLI ESAMI DELLA FACOLTA (cosa da fare successivamente in base all'ordinamento di riferimento)*/
-
+    var efc = 0;
     esamiFacolta.forEach(function(e){
 
         getRowEsameFacolta(e.id, e.nome, e.cfu, function(data){
@@ -97,9 +98,11 @@ $(window).load(function(){
             dropTarget.find('.ghost').on('mouseenter', function(){
                 $(this).css('display', 'inline-block')
             })
-
+            if(efc == esamiFacolta.length - 1) {
+                $('.container-esami-facolta .loader').hide()
+            }
+            efc++
         })
-
     })
 
     /********************/
@@ -123,6 +126,7 @@ $(window).load(function(){
 
     salvaEsame.click(function(){
 
+
         const nome = $(nomeEsame).val()
         const cfu  = parseInt($(pesoEsame).val())
         const self = $(this)
@@ -132,6 +136,8 @@ $(window).load(function(){
         /**************/
 
         if(!checkCampi([nome, cfu])) {
+
+            /* loader */ loaderEsamiUtente.css('display', 'block')  //
 
             //non sto modificando
             if(!isModifingEsameUtente) {
@@ -150,14 +156,15 @@ $(window).load(function(){
                     rowEsameUtente.on("dragstart", onDragStart)
 
                     rowEsameUtente.find('.elimina-esame-utente').click({id: idEsameUtente}, removeEsameUtente)
-                    rowEsameUtente.find('.modifica-esame-utente').click({id: idEsameUtente,nome: nome, cfu: cfu}, modificaEsameUtente)
-
+                    rowEsameUtente.find('.modifica-esame-utente').click({id: idEsameUtente}, modificaEsameUtente)
+                    /* loader */ loaderEsamiUtente.css('display', 'none')  //
                 })
                 // sto modificando
             } else {
                 updateEsameUtente(idEsamePerModifica, nome, parseInt(cfu))
                 $('#' + idEsamePerModifica + '-eu .nome-esame-utente h6').text(nome)
                 $('#' + idEsamePerModifica + '-eu .cfu-esame-utente h6').text(cfu)
+                /* loader */ loaderEsamiUtente.css('display', 'none')  //
             }
 
         } else {
@@ -369,19 +376,44 @@ $(window).load(function(){
         return id
     }
 
-    function removeEsameUtente(e){
-        $('#'+e.data.id).remove()
+    function removeEsameUtenteFromMatching(id){
+        var ids = []
 
-        const id = parseHTMLId(e.data.id)
+        for(i = 0; i < match.length; i++){
+            if(id == match[i].idEsameUtente){
+                //rimuovo il matching dall'array e il relativo riepilogo (che hanno lo stesso id)
+                adjustCFU(getEsame(match[i].idEsameUtente, 'utente'), getEsame(match[i].idEsameFacolta, ''))
+                $('#' + match[i].id + '-m, #' + match[i].id + '-r').remove()
+                ids.push(i)
 
-        for(i = 0; i < esamiUtente.length; i++) {
-            if(id == esamiUtente[i].id) {
-                esamiUtente.splice(i, 1)
-                console.log(esamiUtente)
-                break
             }
         }
 
+        // rimuovo qui
+
+        for(i=0;i<ids.length;i++){
+            match.splice(ids[i], 1)
+        }
+    }
+
+    function removeEsameUtente(e){
+        if(confirm("Operazione irreversibile. Continuare?")) {
+            $('#' + e.data.id).remove()
+
+            const id = parseHTMLId(e.data.id)
+
+            removeEsameUtenteFromMatching(id)
+
+            for (i = 0; i < esamiUtente.length; i++) {
+                if (id == esamiUtente[i].id) {
+                    esamiUtente.splice(i, 1)
+                    break
+                }
+            }
+        }
+        console.log(esamiUtente)
+        console.log(esamiFacolta)
+        console.log(match)
     }
     //mostro la modal con i dati
     function modificaEsameUtente(e){
@@ -391,17 +423,33 @@ $(window).load(function(){
 
         idEsamePerModifica = parseHTMLId(e.data.id)
 
-        $(nomeEsame).val(e.data.nome)
-        $(pesoEsame).val(e.data.cfu)
+
+        const esame = getEsame(idEsamePerModifica, 'utente')
+
+        $(nomeEsame).val(esame.nome)
+        $(pesoEsame).val(esame.cfu)
+
+
+        /*****/
 
     }
     //modifico l'array al click
     function updateEsameUtente(id, nome, cfu){
 
-        for(i = 0; i < esamiUtente.length; i++) {
-            if(id == esamiUtente[i].id) {
-                esamiUtente[i].nome = nome
-                esamiUtente[i].cfu  = cfu
+        for(k = 0; k < esamiUtente.length; k++) {
+            if(id == esamiUtente[k].id) {
+                esamiUtente[k].nome = nome
+
+                /* QUI DEVO MODIFICARE ANCHE I NOMI NELLE DROP-ZONE E NEL RIEPILOGO (graficamente) */
+
+                updateDropZoneFor(esamiUtente[k].id, nome)
+
+                /* PER ORA CONTROLLO SE L'UTENTE HA MODIFICATO ANCHE I CFU, IN TAL CASO LO RIMUOVO
+                * DAL MATCHING*/
+                if(esamiUtente[k].cfu != cfu) {
+                    removeEsameUtenteFromMatching(esamiUtente[k].id)
+                }
+                esamiUtente[k].cfu  = cfu
                 break
             }
         }
@@ -413,6 +461,16 @@ $(window).load(function(){
 
 
     /*************/
+
+    function updateDropZoneFor(idEsameUtente, nome){
+
+        for(f = 0; f < match.length; f++) {
+            if(idEsameUtente == match[f].idEsameUtente) {
+                $('#' + match[f].id + '-m span').text(nome)
+                $('#' + match[f].id + '-r .nome-esame-utente h6').text(nome)
+            }
+        }
+    }
 
 
     /* FUNZIONI MATCHING */
@@ -434,7 +492,7 @@ $(window).load(function(){
 
 
 
-        getRowRiepilogo(id + '-r', esameUtente.nome, esameUtente.cfu, esameFacolta.nome, esameFacolta.cfu, '', function(data){
+        getRowRiepilogo(id, esameUtente.nome, esameUtente.cfu, esameFacolta.nome, esameFacolta.cfu, '', function(data){
             $(containerRiepilogo).append(data)
         })
 
@@ -471,13 +529,13 @@ $(window).load(function(){
 
         // SE I RIMANENTI DELL'ESAME UTENTE DEVONO ESSERE MINORI DEI RIMANENTI DELL'ESAME FACOLTA
 
-        var checkRimanenti;
+        //var checkRimanenti;
 
         /* se i cfu dell'esame utente sono maggiori */
 
-        checkRimanenti = esameUtente.rimanenti <= esameFacolta.rimanenti
+        //checkRimanenti = esameUtente.rimanenti <= esameFacolta.rimanenti
 
-        return esameUtente.rimanenti != 0
+        return esameUtente.rimanenti != 0 && esameFacolta.rimanenti != 0
 
     }
 
@@ -489,27 +547,40 @@ $(window).load(function(){
 
         const idMatching = parseHTMLId($(this).parent().attr('id'))
 
+        //rimuovo la riga dal riepilogo (che ha lo stesso id del match)
+
+        $('#' + idMatching + '-r').remove()
+
+        /////
+
         for(i = 0; i < match.length; i++){
             if(match[i].id == idMatching){
 
                 const esameUtente = getEsame(match[i].idEsameUtente, 'utente')
                 const esameFacolta = getEsame(match[i].idEsameFacolta, '')
 
-                if(esameUtente.cfu >= esameFacolta.cfu) {
-                    esameUtente.rimanenti += esameFacolta.cfu
-                    esameFacolta.rimanenti = esameFacolta.cfu
-                } else {
-                    esameFacolta.rimanenti += esameUtente.cfu
-                    esameUtente.rimanenti = esameUtente.cfu
-                }
+                // correggno i cfu rimanenti
+                adjustCFU(esameUtente, esameFacolta)
 
                 match.splice(i, 1)
+
+                break
             }
         }
         console.log(esamiFacolta)
         console.log(esamiUtente)
     }
 
+
+    function adjustCFU(esameUtente, esameFacolta) {
+        if(esameUtente.cfu >= esameFacolta.cfu) {
+            esameUtente.rimanenti += esameFacolta.cfu
+            esameFacolta.rimanenti = esameFacolta.cfu
+        } else {
+            esameFacolta.rimanenti += esameUtente.cfu
+            esameUtente.rimanenti = esameUtente.cfu
+        }
+    }
 
 
 
@@ -528,12 +599,72 @@ $(window).load(function(){
 
         const id = idEsame
 
-        for(i = 0; i < arrayEsami.length; i++) {
-            if(arrayEsami[i].id === id){
-                return arrayEsami[i]
+        for(j = 0; j < arrayEsami.length; j++) {
+            if(arrayEsami[j].id === id){
+                return arrayEsami[j]
             }
         }
         return null
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+    /* DOCUMENTI */
+
+
+    function getFirstPDFPage() {
+        document.querySelector("#pdf-upload").addEventListener("change", function(e){
+
+            // MOSTRO LA PRIMA PAGINE DEL PDF SCELTO
+            // https://mozilla.github.io/pdf.js/
+            // https://codepen.io/Shiyou/pen/JNLwVO
+
+            var canvasElement = document.querySelector("canvas")
+            var file = e.target.files[0]
+            if(file.type != "application/pdf"){
+                console.error(file.name, "is not a pdf file.")
+                return
+            }
+
+            var fileReader = new FileReader();
+
+            fileReader.onload = function() {
+                var typedarray = new Uint8Array(this.result);
+
+                PDFJS.getDocument(typedarray).then(function(pdf) {
+                    // you can now use *pdf* here
+                    console.log("the pdf has ",pdf.numPages, "page(s).")
+                    pdf.getPage(1).then(function(page) {
+                        // you can now use *page* here
+                        var viewport = page.getViewport(2.0);
+                        var canvas = document.querySelector("canvas")
+                        canvas.height = viewport.height;
+                        canvas.width = viewport.width;
+
+
+                        page.render({
+                            canvasContext: canvas.getContext('2d'),
+                            viewport: viewport
+                        });
+                    });
+
+                });
+            };
+
+            fileReader.readAsArrayBuffer(file);
+        })
+    }
+
+
 
 })
