@@ -1,6 +1,17 @@
 body{
   background: #fdfdfd;
 }
+
+
+/* NON RESPONSIVE */
+
+.container {
+  min-width: 970px;
+}
+
+/*******/
+
+
 .main {
   padding-top: 50px;
   background: #fff;
@@ -60,12 +71,12 @@ body{
   margin-bottom: 5px;
 }
 .esame{
-  border: solid 1px #359ad8!important;
+  border: solid 1px #5bc0de!important;
   border-radius: 5px;
   padding: 3px 10px;
-  background: lightskyblue;
+  background: #5bc0de;
   display: inline-block;
-  color: #000;
+  color: #fff;
   margin-right: 10px;
   vertical-align: middle;
   margin-bottom: 5px;
@@ -93,11 +104,18 @@ body{
   top:0;left:0;right:0;bottom:0;
   background: rgba(255,255,255, .5);
 }
+.send-container .loader{
+  position: relative;
+  margin: 0 auto;
+}
+.send{
+  position: relative;
+}
 .loader img {
   width: 40px;
   height: 40px;
   position: absolute;
-  top:50%;left:50%;transform: translate(-50%, 50%);
+  top:50%;left:50%;transform: translate(-50%, -50%);
 }
 .container-esami-utente .loader {
   display: none;
@@ -119,4 +137,70 @@ body{
 
 .scroll-bar-padding {
   padding-right: 13px;
+}
+
+.esame .fas.fa-minus{
+  margin-right: 5px;
+}
+
+.esame .fas.fa-plus {
+  margin-right: 10px;
+}
+
+.matching-container{
+  display: none;
+  opacity: 0;
+}
+
+.color-draft{
+  color: gray;
+}
+canvas{
+  background: #ccc;
+  display: inline-block;
+  width: 150px;
+  height: 200px;
+  position: relative;
+  background-position: center center;
+  background-size: contain;
+  background-repeat: no-repeat;
+}
+.canvas-container{
+  position: relative;
+  margin-right: 20px;
+  width: 150px;
+  vertical-align: bottom;
+  display: inline-block;
+}
+.canvas-container .fa-plus{
+  position: absolute;
+  top:50%;left:50%;transform:translate(-50%,-50%);
+  color: white;
+  cursor: pointer;
+}
+.canvas-container .fa-minus{
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  z-index: 99999909090;
+  padding: 5px;
+  border-radius: 3px;
+  background: red;
+  color: white;
+  font-size: 8px;
+  display: none;
+  cursor: pointer;
+}
+.inner-canvas{
+  white-space: nowrap;
+  width: auto;
+  overflow: hidden;
+}
+.add-document-container{
+  overflow-x: scroll;
+  position: relative;
+}
+.inner-canvas input[type="file"] {
+  visibility: hidden;
+  height: 0;
 }
